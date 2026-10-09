@@ -150,7 +150,6 @@ export default function App() {
   const [options, setOptions] = useState([])
   const [ratings, setRatings] = useState([])
   const [assignment, setAssignment] = useState(null)
-  const [exhausted, setExhausted] = useState(false)
   const [notes, setNotes] = useState('')
 
   const flash = useCallback((text) => {
@@ -188,9 +187,25 @@ export default function App() {
     () => ratings.find((r) => r.rated_on === today) ?? null,
     [ratings, today]
   )
+  /**
+   * Derived rather than held in state, so it survives a reload. When every option has
+   * been ruled out, the stored assignment keeps its last option_id and that id also
+   * appears in excluded_ids - which is the signal. Tracking this in local state meant a
+   * refresh showed the last-rejected option as the day's pick while simultaneously
+   * listing it as ruled out.
+   */
+  const exhausted = useMemo(() => {
+    if (!assignment) return false
+    const excluded = (assignment.excluded_ids ?? []).map(String)
+    return excluded.includes(String(assignment.option_id))
+  }, [assignment])
+
   const currentOption = useMemo(
-    () => options.find((o) => String(o.id) === String(assignment?.option_id)) ?? null,
-    [options, assignment]
+    () =>
+      exhausted
+        ? null
+        : options.find((o) => String(o.id) === String(assignment?.option_id)) ?? null,
+    [options, assignment, exhausted]
   )
   const activeCount = options.filter((o) => o.active).length
 
@@ -246,7 +261,6 @@ export default function App() {
       }
       const res = await redrawExcludingCurrent(assignment, options, ratings)
       setAssignment(res.assignment)
-      setExhausted(res.exhausted)
       flash(res.exhausted ? 'Nothing left to try today.' : 'Picked something else.')
     } catch (e) {
       setError(e.message ?? String(e))
