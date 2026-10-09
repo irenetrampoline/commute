@@ -1,0 +1,28 @@
+{
+  "name": "commute",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Thompson sampling bandit for choosing a daily commute. Builds to irenechen.net/commute and /commute-edit.",
+  "scripts": {
+    "dev": "vite",
+    "dev:edit": "vite --config vite.config.edit.js",
+    "build": "npm run build:main && npm run build:edit",
+    "build:main": "vite build",
+    "build:edit": "vite build --config vite.config.edit.js && node scripts/finalize-edit.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "happy-dom": "^20.14.6",
+    "vite": "^7.3.1",
+    "vite-plugin-singlefile": "^2.3.0",
+    "vitest": "^2.1.9"
+  }
+}

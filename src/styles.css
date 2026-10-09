@@ -1,0 +1,478 @@
+/* Warm palette borrowed from radish, so /commute doesn't look like a stranger on the
+   site. One mark colour for the chart: identity comes from the row label, never hue,
+   so there is no categorical palette to get wrong. --mark passes the chroma floor,
+   the 0.43-0.77 lightness band, and 3:1 contrast against --surface. */
+:root {
+  --bg: #f9f7f2;
+  --surface: #fdfbf7;
+  --border: #e7e0d4;
+  --ink: #2c2416;
+  --muted: #8a7560;
+  --mark: #3f7d4a;
+  --mark-soft: #3f7d4a40;
+  --accent: #c4623a;
+  --error-bg: #f8d7da;
+  --error-ink: #721c24;
+  --ok-bg: #d4edda;
+  --ok-ink: #155724;
+  --radius: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 540px;
+  margin: 0 auto;
+  padding-block: 28px 56px;
+  padding-inline: 16px;
+}
+
+/* --- header ------------------------------------------------------------- */
+
+.head {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.date {
+  color: var(--muted);
+  font-size: 15px;
+  margin-top: 2px;
+}
+
+.demo-note {
+  color: var(--accent);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.loading {
+  color: var(--muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* --- banners ------------------------------------------------------------ */
+
+.banner {
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+}
+
+.banner-error {
+  background: var(--error-bg);
+  color: var(--error-ink);
+}
+
+.banner-ok {
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+
+/* --- cards -------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  padding: 18px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card-sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.card-sub a,
+.foot a {
+  color: var(--accent);
+}
+
+/* --- today -------------------------------------------------------------- */
+
+.pick {
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin: 10px 0 4px;
+}
+
+.pick-none {
+  color: var(--muted);
+}
+
+.excluded {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.rate-q {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 14px 0 8px;
+}
+
+.rate-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.rate-btn {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-family: inherit;
+  gap: 2px;
+  padding: 10px 2px;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.rate-btn:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--mark);
+}
+
+.rate-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.rate-num {
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.rate-word {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.notes {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  margin-top: 10px;
+  padding: 9px 10px;
+  width: 100%;
+}
+
+.notes:focus {
+  border-color: var(--mark);
+  outline: none;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  margin-top: 12px;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.rated-line {
+  font-size: 17px;
+  margin-top: 10px;
+}
+
+.rated-notes {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.h-word {
+  color: var(--muted);
+  font-size: 13px;
+  margin-left: 6px;
+}
+
+/* --- standings chart ---------------------------------------------------- */
+/* Dot plot with credible-interval whiskers. Not bars: the scale starts at 1, and a
+   bar would imply a zero baseline that doesn't exist on a 1-5 rating. */
+
+.srow {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 7.5em 1fr 2.4em 1.8em;
+  padding: 7px 0;
+}
+
+.srow-head {
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  margin-top: 14px;
+  text-transform: uppercase;
+}
+
+.srow-empty {
+  opacity: 0.55;
+}
+
+.srow-name {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srow-mean {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
+.srow-n {
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.track {
+  height: 16px;
+  position: relative;
+}
+
+.track-axis {
+  height: 12px;
+}
+
+.axis-label {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.track-grid .tick {
+  background: var(--border);
+  bottom: 2px;
+  position: absolute;
+  top: 2px;
+  width: 1px;
+}
+
+/* 2px line, per the mark spec; the soft tint keeps it recessive next to the dot. */
+.whisker {
+  background: var(--mark-soft);
+  border-radius: 1px;
+  height: 2px;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* >=8px marker with a 2px surface ring so it stays legible over the whisker. */
+.dot {
+  background: var(--mark);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  height: 12px;
+  margin-left: -6px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+}
+
+.badge {
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  margin-left: 5px;
+  padding: 1px 4px;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.badge-today {
+  background: var(--mark);
+  color: #fff;
+}
+
+.badge-paused {
+  background: var(--border);
+  color: var(--muted);
+}
+
+/* --- history ------------------------------------------------------------ */
+
+.history {
+  border-collapse: collapse;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.history td {
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  padding: 7px 0;
+}
+
+.history tr:first-child td {
+  border-top: none;
+}
+
+.h-date {
+  color: var(--muted);
+  white-space: nowrap;
+  width: 7.5em;
+}
+
+.h-rating {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.foot {
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* --- PIN gate ----------------------------------------------------------- */
+
+.pin-wrap {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+.pin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-width: 300px;
+  padding: 24px;
+  width: 100%;
+}
+
+.pin-title {
+  font-size: 20px;
+  font-weight: 650;
+  margin-bottom: 16px;
+}
+
+.pin-label {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.pin-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 17px;
+  padding: 10px;
+  width: 100%;
+}
+
+.pin-input:focus {
+  border-color: var(--mark);
+  outline: none;
+}
+
+.pin-error {
+  color: var(--error-ink);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.pin-button {
+  background: var(--mark);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  margin-top: 14px;
+  padding: 10px;
+  width: 100%;
+}
+
+.pin-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* --- narrow phones ------------------------------------------------------ */
+
+@media (max-width: 400px) {
+  .srow {
+    grid-template-columns: 5.5em 1fr 2.2em 1.6em;
+    gap: 7px;
+  }
+
+  .pick {
+    font-size: 28px;
+  }
+
+  .rate-word {
+    display: none;
+  }
+}
